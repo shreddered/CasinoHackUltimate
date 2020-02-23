@@ -1,10 +1,18 @@
 CC=g++
 LIBS=-llept -ltesseract -lcurl 
 CPPFLAGS=-O --std=c++17
-INCLUDE_PATH=-I/usr/local/Cellar/leptonica/1.78.0/include/ -Iinclude/
+INCLUDE_PATH=-Iinclude/
 BIN=test
 # because of header-only style
 MAINFILE=src/main.cpp
+
+ifndef ($(OS))
+	# unix case
+	ifeq ($(shell uname -s), Darwin)
+		# path to leptonica headers installed by brew
+		INCLUDE_PATH += -I/usr/local/Cellar/leptonica/1.78.0/include/
+	endif
+endif
 
 all: main
 	$(CC) $(LIBS) main.o -o $(BIN)
