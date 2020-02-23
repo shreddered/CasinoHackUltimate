@@ -12,7 +12,7 @@
 Необходимо наличие утилиты make.
 ```bash
 $ make
-$ ./casino_hack <token>
+$ ./casino_hack "token"
 ```
 
 ## Further Development
