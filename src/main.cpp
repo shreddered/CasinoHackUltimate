@@ -16,10 +16,14 @@ using namespace std;
 
 string casino_hack(const VK::Client& client);
 
-int main() {
+int main(int argc, char** argv) {
 	setlocale(LC_ALL, "");
 	srand(time(0));
-	auto client = VK::Client();
+    if (argc < 2) {
+        cerr << "Invalid usage." << endl << "Usage: " << argv[0] << " <token>" << endl;
+        exit(1);
+    }
+	auto client = VK::Client(string(argv[1]));
 	while(true) {
 		try {
 			client.send_message(LEVEL, COIN_MATH);

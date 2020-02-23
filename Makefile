@@ -2,7 +2,7 @@ CC=g++
 LIBS=-llept -ltesseract -lcurl 
 CPPFLAGS=-O --std=c++17
 INCLUDE_PATH=-Iinclude/
-BIN=test
+BIN=casino_hack
 # because of header-only style
 MAINFILE=src/main.cpp
 

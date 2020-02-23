@@ -17,7 +17,8 @@ public:
 	virtual ~error() noexcept = default;
 };
 
-template <class T, class S> class ExpressionParser final {
+template <class T, class S>
+class ExpressionParser final {
 private:
 	enum {
 		op_add, // +
@@ -184,7 +185,8 @@ public:
 	}
 };
 
-template <class T, class S> inline constexpr T eval(const S& expr) {
+template <class T, class S>
+inline constexpr T eval(const S& expr) {
 	auto parser = ExpressionParser<T, S>();
 	return parser.eval(expr);
 }
@@ -193,7 +195,8 @@ inline constexpr int eval(const string& expr) {
 	return eval<int, string>(expr);
 }
 
-template<class T> class basic_fraction final {
+template<class T>
+class basic_fraction final {
 public:
     T num, den;
     explicit constexpr basic_fraction(const T& _num, const T& _den) {
