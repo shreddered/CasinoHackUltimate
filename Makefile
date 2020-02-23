@@ -3,6 +3,7 @@ LIBS=-llept -ltesseract -lcurl
 CPPFLAGS=-O --std=c++17
 INCLUDE_PATH=-I/usr/local/Cellar/leptonica/1.78.0/include/ -I./src/include/
 BIN=test
+# because of header-only style
 MAINFILE=src/main.cpp
 
 all: main
