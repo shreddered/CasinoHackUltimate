@@ -2,6 +2,7 @@
 #define __IMAGE_HPP_INCLUDED
 
 #include <cstdlib>
+#include <regex>
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -43,7 +44,10 @@ wstring wrap(const wstring& str) noexcept {
 		}
 		else if(*it == '=')
 			break;
-	return result;
+    std::wregex r1(L"([0-9]+)(\\()", std::wregex::extended),
+                r2(L"(\\))([0-9]+)", std::wregex::extended);
+	result = std::regex_replace(result, r1, L"\\1*\\2", std::regex_constants::format_sed);
+    return std::regex_replace(result, r2, L"\\1*\\2", std::regex_constants::format_sed);
 }
 
 wstring parse(const string& path_to_image, const string& filename) {
@@ -59,6 +63,7 @@ wstring parse(const string& path_to_image, const string& filename) {
 	auto image = pixRead(path_to_image.c_str());
 	auto box = boxCreate(80, 80, 700-160, 540-160);
 	image = pixClipRectangle(image, box, NULL);
+    api.SetVariable("tessedit_char_whitelist", "0123456789-+=*()\"'zli");
 	api.SetPageSegMode(tesseract::PSM_AUTO);
 	api.SetImage(image);
 	auto c = api.GetUTF8Text();

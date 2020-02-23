@@ -1,15 +1,12 @@
-#include "calc.hpp"
-#include "image.hpp"
+#include <regex>
 #include <iostream>
 
 using namespace std;
-using calculator::fraction;
 
 
-int main() {
-	//wcout << image::parse("image.jpg", "") << endl;
-    auto f = fraction(-5, 4) + fraction(1, 4);
-    cout << f * fraction(1, 2) << endl;
-    cout << calculator::eval("2+2") << endl;
+int main(int argc, char** argv) {
+    std::string s(argv[1]);
+    std::regex r("([0-9]+)(\\()", std::regex::extended);
+    std::cout << std::regex_replace(s, r, "\\1*\\2", std::regex_constants::format_sed) << std::endl;
 	return 0;
 }
