@@ -1,11 +1,11 @@
-CC=g++-9
-LIBS=-llept -ltesseract -lcurl 
-CPPFLAGS=-O --std=c++17 -fmax-errors=10
+CC = g++
+LIBS = -llept -ltesseract -lcurl 
+CPPFLAGS= -O --std=c++17 
 LDFLAGS =
-INCLUDE_PATH=-Iinclude/
-BIN=casino_hack
+INCLUDE_PATH = -Iinclude/
+BIN = casino_hack
 # because of header-only style
-MAINFILE=src/main.cpp
+MAINFILE=src/test.cpp
 
 ifndef ($(OS))
 	# unix case
