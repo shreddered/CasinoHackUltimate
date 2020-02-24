@@ -197,18 +197,16 @@ template<class T>
 class Fraction final {
 public:
     T num, den;
-    explicit constexpr Fraction(const T& _Num, const T& _Den) {
-        if (!_Den)
+    explicit constexpr Fraction(const T& _num, const T& _den) : num(_num), den(_den) {
+        if (!_den)
             throw std::invalid_argument("Denominator must be != 0");
-        this->num = _Num;
-        this->den = _Den;
         this->reduce();
     }
     inline constexpr Fraction<T>& reverse() noexcept {
         std::swap(this->num, this->den);
         return *this;
     }
-    inline std::string dump() const noexcept {
+    inline std::string toString() const noexcept {
         return (((this->num < 0) != (this->den < 0)) ? "-" : "") + std::string(abs(this->num)) + 
             ((abs(this->den) == 1) ? "" : ('/' + std::string(abs(this->den))));
     }
