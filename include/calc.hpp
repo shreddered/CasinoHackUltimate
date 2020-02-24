@@ -6,27 +6,25 @@
 #include <cmath>
 #include <stdexcept>
 
-using std::string, std::stack, std::wstring;
-
 
 namespace calculator {
 
-class error : public std::runtime_error {
+class Error : public std::runtime_error {
 public:
-	explicit error(const string& msg) noexcept: std::runtime_error(msg) {}
-	virtual ~error() noexcept = default;
+	explicit Error(const std::string& msg) noexcept: std::runtime_error(msg) {}
+	virtual ~Error() noexcept = default;
 };
 
 template <class T, class S>
 class ExpressionParser final {
 private:
 	enum {
-		op_add, // +
-		op_sub, // -
-		op_multi, // *
-		op_div, // /
-		op_pow, // **
-		op_null
+		opAdd, // +
+		opSub, // -
+		opMulti, // *
+		opDiv, // /
+		opPow, // **
+		opNull
 	};
 	struct Operator final {
 		int op;
@@ -41,78 +39,78 @@ private:
 		inline constexpr const int& priority() const noexcept {
 			return this->op.priority;
 		}
-		inline constexpr bool is_null() const {
-			return this->op.op == op_null;
+		inline constexpr bool isNull() const {
+			return this->op.op == opNull;
 		}
 	};
 	S expr;
 	int idx;
-	stack<OperatorValue> _stack;
+    std::stack<OperatorValue> _Stack;
 	constexpr T calculate(const T& val_1, const T& val_2, const Operator& op) const noexcept {
 		switch(op.op) {
-			case op_add: 
+			case opAdd: 
 				return val_2 + val_1;
-			case op_sub:
+			case opSub:
 				return val_1 - val_2;
-			case op_multi:
+			case opMulti:
 				return val_1 * val_2;
-			case op_div:
+			case opDiv:
 				return val_1 / val_2;
-			case op_pow:
+			case opPow:
 				return pow(val_1, val_2);
 			default:
 				return 0;
 		}
 	}
-	constexpr typename S::value_type get_char() const noexcept {
+	constexpr typename S::value_type getChar() const noexcept {
 		if(this->idx < std::size(this->expr))
 			return this->expr[this->idx];
 		return 0;
 	}
-	constexpr void skip_whitespace() noexcept {
-		while(std::isspace(this->get_char()) != 0)
+	constexpr void skipWhitespace() noexcept {
+		while(std::isspace(this->getChar()) != 0)
 			++this->idx;
 	}
-	constexpr Operator parse_op() noexcept {
-		this->skip_whitespace();
-		switch(get_char()) {
+	constexpr Operator parseOp() noexcept {
+		this->skipWhitespace();
+		switch(getChar()) {
 			case '+':
 				++this->idx;
-				return Operator(op_add, 10, 'L');
+				return Operator(opAdd, 10, 'L');
 			case '-':
 				++this->idx;
-				return Operator(op_sub, 10, 'L');
+				return Operator(opSub, 10, 'L');
 			case '/':
 				++this->idx;
-				return Operator(op_div, 20, 'L');
+				return Operator(opDiv, 20, 'L');
 			case '*':
 				++this->idx;
-				if (this->get_char() != '*')
-					return Operator(op_multi, 20, 'L');
+				if (this->getChar() != '*')
+					return Operator(opMulti, 20, 'L');
 				++this->idx;
-				return Operator(op_pow, 30, 'R');
+				return Operator(opPow, 30, 'R');
 			default:
-				return Operator(op_null, 0, 'L');
+				return Operator(opNull, 0, 'L');
 		}
 	}
-	inline static constexpr T to_int(const typename S::value_type& c) noexcept {
+	inline static constexpr T toInt(const typename S::value_type& c) noexcept {
 		if (c >= '0' && c <= '9')
 			return c - '0';
 		return 0xf + 1;
 	}
-	inline constexpr T get_int() const noexcept {
-		return to_int(this->get_char());
+	inline constexpr T getInt() const noexcept {
+		return toInt(this->getChar());
 	}
 	constexpr T parse() noexcept {
 		T val = 0;
-		for(T num; (num = this->get_int()) <= 9; ++idx)
+		for(T num; (num = this->getInt()) <= 9; ++idx)
 			val = val * 10 + num;
 		return val;
 	}
-	constexpr T parse_value() {
+	constexpr T parseValue() {
 		T val = 0;
-		this->skip_whitespace();
-		switch(this->get_char()) {
+		this->skipWhitespace();
+		switch(this->getChar()) {
 			case '0':
 				[[fallthrough]];
 			case '1':
@@ -136,42 +134,42 @@ private:
 				break;
 			case '(':
 				++this->idx;
-				val = this->parse_expr();
-				this->skip_whitespace();
-				if (this->get_char() != ')' && this->idx >= std::size(this->expr))
-					throw error("Пошла фигня: ')' не нашёл");
+				val = this->parseExpr();
+				this->skipWhitespace();
+				if (this->getChar() != ')' && this->idx >= std::size(this->expr))
+					throw Error("Пошла фигня: ')' не нашёл");
 				++this->idx;
 				break;
 			case '+':
 				++this->idx;
-				val = parse_value();
+				val = parseValue();
 				break;
 			case '-':
 				++this->idx;
-				val = parse_value() * static_cast<T>(-1);
+				val = parseValue() * static_cast<T>(-1);
 				break;
 			default:
 				if (this->idx >= std::size(this->expr))
-					throw error("Пошла фигня");
+					throw Error("Пошла фигня");
 				break;
 		} //switch
 		return val;
 	}
-	constexpr T parse_expr() {
-		this->_stack.push(OperatorValue(Operator(op_null, 0, 'L'), 0));
-		T val = this->parse_value();
-		while(!_stack.empty()) {
-			auto op = Operator(this->parse_op());
-			while(op.priority < this->_stack.top().priority() || (op.priority == this->_stack.top().priority() && op.side == 'L')) {
-				if (this->_stack.top().is_null()) {
-					this->_stack.pop();
+	constexpr T parseExpr() {
+		this->_Stack.push(OperatorValue(Operator(opNull, 0, 'L'), 0));
+		T val = this->parseValue();
+		while(!_Stack.empty()) {
+			auto op = Operator(this->parseOp());
+			while(op.priority < this->_Stack.top().priority() || (op.priority == this->_Stack.top().priority() && op.side == 'L')) {
+				if (this->_Stack.top().isNull()) {
+					this->_Stack.pop();
 					return val;
 				}
-				val = calculate(this->_stack.top().value, val, this->_stack.top().op);
-				this->_stack.pop();
+				val = calculate(this->_Stack.top().value, val, this->_Stack.top().op);
+				this->_Stack.pop();
 			}
-			this->_stack.push(OperatorValue(op, val));
-			val = this->parse_value();
+			this->_Stack.push(OperatorValue(op, val));
+			val = this->parseValue();
 		}
 		return 0;
 	}
@@ -180,10 +178,10 @@ public:
 		T result = 0;
 		this->idx = 0;
 		this->expr = expr;
-		result = this->parse_expr();
+		result = this->parseExpr();
 		return result;
 	}
-};
+}; // class 
 
 template <class T, class S>
 inline constexpr T eval(const S& expr) {
@@ -191,58 +189,58 @@ inline constexpr T eval(const S& expr) {
 	return parser.eval(expr);
 }
 
-inline constexpr int eval(const string& expr) {
-	return eval<int, string>(expr);
+inline constexpr int eval(const std::string& expr) {
+	return eval<int, std::string>(expr);
 }
 
 template<class T>
-class basic_fraction final {
+class Fraction final {
 public:
     T num, den;
-    explicit constexpr basic_fraction(const T& _num, const T& _den) {
-        if (!_den)
+    explicit constexpr Fraction(const T& _Num, const T& _Den) {
+        if (!_Den)
             throw std::invalid_argument("Denominator must be != 0");
-        this->num = _num;
-        this->den = _den;
+        this->num = _Num;
+        this->den = _Den;
         this->reduce();
     }
-    inline constexpr basic_fraction<T>& reverse() noexcept {
+    inline constexpr Fraction<T>& reverse() noexcept {
         std::swap(this->num, this->den);
         return *this;
     }
-    inline string dump() const noexcept {
-        return (((this->num < 0) != (this->den < 0)) ? "-" : "") + std::to_string(abs(this->num)) + 
-            ((abs(this->den) == 1) ? "" : ('/' + std::to_string(abs(this->den))));
+    inline std::string dump() const noexcept {
+        return (((this->num < 0) != (this->den < 0)) ? "-" : "") + std::string(abs(this->num)) + 
+            ((abs(this->den) == 1) ? "" : ('/' + std::string(abs(this->den))));
     }
     /*
      * '+', '-', '*', '/' unary/binary operators
      * Note that reduce happens on construction
      */ 
     template<class T1> 
-        friend inline constexpr basic_fraction<T1> operator +(const basic_fraction<T1>& f1, const basic_fraction<T1>& f2) noexcept {
-            return basic_fraction<T1>(f1.num * f2.den + f2.num * f1.den, f1.den * f2.den);
+        friend inline constexpr Fraction<T1> operator +(const Fraction<T1>& f1, const Fraction<T1>& f2) noexcept {
+            return Fraction<T1>(f1.num * f2.den + f2.num * f1.den, f1.den * f2.den);
         }
     template<class T1>
-        friend inline constexpr basic_fraction<T1> operator -(const basic_fraction<T1>& f1, const basic_fraction<T1>& f2) noexcept {
+        friend inline constexpr Fraction<T1> operator -(const Fraction<T1>& f1, const Fraction<T1>& f2) noexcept {
             return f1 + (-f2);
         }
     template<class T1>
-        friend inline constexpr basic_fraction<T1> operator *(const basic_fraction<T1>& f1, const basic_fraction<T1>& f2) noexcept {
-            return basic_fraction<T1>(f1.num * f2.num, f2.den * f1.den);
+        friend inline constexpr Fraction<T1> operator *(const Fraction<T1>& f1, const Fraction<T1>& f2) noexcept {
+            return Fraction<T1>(f1.num * f2.num, f2.den * f1.den);
         }
     template<class T1>
-        friend inline constexpr basic_fraction<T1> operator /(const basic_fraction<T1>& f1, const basic_fraction<T1>& f2) noexcept {
+        friend inline constexpr Fraction<T1> operator /(const Fraction<T1>& f1, const Fraction<T1>& f2) noexcept {
             return f1 * f2.reverse();
         }
     template<class T1>
-        friend std::ostream& operator <<(std::ostream& os, const basic_fraction<T1>& frac) noexcept {
+        friend std::ostream& operator <<(std::ostream& os, const Fraction<T1>& frac) noexcept {
             return os << frac.dump();
         }
-    inline constexpr basic_fraction<T>& operator -() noexcept {
+    inline constexpr Fraction<T>& operator -() noexcept {
         this->num *= static_cast<T>(-1);
         return *this;
     }
-    inline constexpr basic_fraction<T>& operator +() noexcept {
+    inline constexpr Fraction<T>& operator +() noexcept {
         return *this; //lol
     }
 private:
@@ -253,24 +251,22 @@ private:
         }
         return a;
     }
-    constexpr basic_fraction<T>& reduce() noexcept {
-        T div = basic_fraction::gcd(this->num, this->den);
+    constexpr Fraction<T>& reduce() noexcept {
+        T div = Fraction::gcd(this->num, this->den);
         this->num /= div;
         this->den /= div;
         return *this;
     }
-};
-
-typedef basic_fraction<int> fraction;
+}; // class
 
 }; //namespace calculator
 
 int operator "" _solve(const char* s, unsigned long n) {
-	return calculator::eval<int>(string(s, n));
+	return calculator::eval<int>(std::string(s, n));
 }	
 
 int operator "" _solve(const wchar_t* s, unsigned long n) {
-	return calculator::eval<int>(wstring(s, n));
+	return calculator::eval<int>(std::wstring(s, n));
 }
 
 #endif /* __CALC_HPP_INCLUDED */

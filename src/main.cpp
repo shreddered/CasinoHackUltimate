@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 			}
 			sleep(15);
 		}
-		catch(const calculator::error& err) {
+		catch(const calculator::Error& err) {
 			cout << err.what() << endl;
 		}
 		catch(const VK::error& err) {
