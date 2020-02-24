@@ -129,6 +129,14 @@ wstring parse(const string& path_to_image, const string& filename) {
 	return wrap(wstring(dst));
 }
 
+namespace {
+    struct Temp {
+        /*TODO: implement tuple-like struct with additional method processing 
+         * (private?) fields
+         */
+    }; // struct
+}
+
 std::string parse12lvl(const string& name) {
     auto api = tesseract::TessBaseAPI();
 	if(api.Init("data", "eng"))
