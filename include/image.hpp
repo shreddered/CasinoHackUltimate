@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <regex>
 #include <fstream>
+#include <stdexcept>
 #include <string>
 #include <sstream>
 #include <tesseract/baseapi.h>
@@ -50,55 +51,92 @@ wstring wrap(const wstring& str) noexcept {
     return std::regex_replace(result, r2, L"\\1*\\2", std::regex_constants::format_sed);
 }
 
+class Image;
+
+class Box {
+    int32_t x, y, w, h;
+    BOX* box = nullptr;
+public:
+    friend class Image;
+    explicit Box(const int32_t& x, const int32_t& y, const int32_t& w, const int32_t& h) 
+        noexcept : x(x), y(y), w(w), h(h), box(boxCreate(x, y, w, h)) {}
+    Box(const Box& other) = delete;
+    Box& operator =(const Box& other) = delete;
+    explicit Box(Box&& other) noexcept : box(other.box), x(other.x), y(other.y),
+                                                         w(other.w), h(other.h)
+    {
+        other.box = nullptr;
+    }
+    Box& operator =(Box&& other) noexcept {
+        box = other.box;
+        other.box = nullptr;
+        x = other.x;
+        y = other.y;
+        w = other.w;
+        h = other.h;
+        return *this;
+    }
+    virtual ~Box() noexcept {
+        if (box)
+            boxDestroy(&box);
+    }
+};
+
+class Image {
+    PIX* pix;
+public:
+    explicit inline Image(const std::string& name) noexcept : pix(pixRead(name.c_str())) {}
+    explicit inline Image(Image&& other) noexcept : pix(other.pix) {
+        other.pix = nullptr;
+    }
+    explicit inline Image(PIX* ptr) noexcept : pix(ptr) {}
+    inline Image& operator =(Image&& other) noexcept {
+        pix = other.pix;
+        other.pix = nullptr;
+        return *this;
+    }
+    Image(const Image& other) = delete;
+    Image& operator =(const Image& other) = delete;
+    virtual inline ~Image() noexcept {
+        if (pix)
+            pixDestroy(&pix); 
+    }
+    inline Image clipRectangle(const Box& box) noexcept {
+        return Image(pixClipRectangle(pix, box.box, nullptr)); 
+    }
+    inline PIX* ptr() {
+        return pix;
+    }
+};
+
 wstring parse(const string& path_to_image, const string& filename) {
 	auto api = tesseract::TessBaseAPI();
-	if(api.Init("data", "eng")) {
-#if __cplusplus < 201103L
-		std::cerr << "Пошла хуйня: не могу открыть tesseract" << '\n';
-		exit(1);
-#else
+	if(api.Init("data", "eng"))
 		throw std::runtime_error("Пошла хуйня: не могу открыть tesseract");
-#endif	
-	}
-	auto image = pixRead(path_to_image.c_str());
-	auto box = boxCreate(80, 80, 700-160, 540-160);
-	image = pixClipRectangle(image, box, NULL);
+	//auto image = pixRead(path_to_image.c_str());
+    Image image(path_to_image); 
+	Box box(80, 80, 700-160, 540-160);
+	image = image.clipRectangle(box);
     api.SetVariable("tessedit_char_whitelist", "0123456789-+=*()\"'zli");
 	api.SetPageSegMode(tesseract::PSM_AUTO);
-	api.SetImage(image);
+	api.SetImage(image.ptr());
 	auto c = api.GetUTF8Text();
 	auto size = strlen(c) + 1;
 	wchar_t dst[size];
 	mbstowcs(dst, c, size); 
 	api.End();
-	pixDestroy(&image);
-	boxDestroy(&box);
 	std::wcout << dst << L"--->";
 	return wrap(wstring(dst));
 }
 
-//void download(const string&); // writes raw data to ./image.jpg
-
-/*typedef std::tuple<string, string, string, string, string> response_t;
-
-response_t split_fraction(const string& path_to_image) {
+std::string parse12lvl(const string& name) {
     auto api = tesseract::TessBaseAPI();
-	if(api.Init("data", "eng")) {
-#if __cplusplus < 201103L
-		std::cerr << "Пошла хуйня: не могу открыть tesseract" << '\n';
-		exit(1);
-#else
+	if(api.Init("data", "eng"))
 		throw std::runtime_error("Пошла хуйня: не могу открыть tesseract");
-#endif
-    }*/
-	/*
-	 * Using boxCreate(x, y, width, height) and pixClipRectangle(image, box, nullptr) o crop an image
-	 */ 
-    /*auto image = pixRead(path_to_image.c_str());
-#define _rw 60
-#define _rh 40
-    auto box1 = boxCreate(); 
-}*/
+	//auto image = pixRead(path_to_image.c_str());
+    Image image(name); 
+    //TODO: make 5 boxes for 4 numbers and operator
+}
 
 }; //namespace image
 
