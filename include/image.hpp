@@ -129,6 +129,14 @@ wstring parse(const string& path_to_image, const string& filename) {
 	return wrap(wstring(dst));
 }
 
+namespace {
+    struct Temp {
+        /*TODO: implement tuple-like struct with additional method processing 
+         * (private?) fields
+         */
+    }; // struct
+}
+
 std::string parse12lvl(const string& name) {
     auto api = tesseract::TessBaseAPI();
 	if(api.Init("data", "eng"))
@@ -136,6 +144,24 @@ std::string parse12lvl(const string& name) {
 	//auto image = pixRead(path_to_image.c_str());
     Image image(name); 
     //TODO: make 5 boxes for 4 numbers and operator
+    /*
+     *
+     *    num1         num3
+     * ---------- op ---------
+     *    num2         num4
+     *
+     */    
+    Box b1(220 - 60, 214 - 40, 120, 90), // num1
+        b2(220 - 60, 334 - 40, 120, 90), // num2
+        op(350 - 60, 214 - 40, 120, 140), // op
+        b3(480 - 60, 214 - 40, 120, 90),
+        b4(480 - 60, 334 - 40, 120, 90);
+    image = image.clipRectangle(b4);
+    pixWrite("test.png", image.ptr(), IFF_PNG);
+    api.SetImage(image.ptr());
+    auto c = api.GetUTF8Text();
+    api.End();
+    return std::string(c);
 }
 
 }; //namespace image
