@@ -5,7 +5,7 @@ LDFLAGS =
 INCLUDE_PATH = -Iinclude/
 BIN = casino_hack
 # because of header-only style
-MAINFILE=src/test.cpp
+MAINFILE=src/main.cpp
 
 ifndef ($(OS))
 	# unix case
