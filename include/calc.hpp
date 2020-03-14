@@ -207,8 +207,8 @@ public:
         return *this;
     }
     inline std::string toString() const noexcept {
-        return (((this->num < 0) != (this->den < 0)) ? "-" : "") + std::string(abs(this->num)) + 
-            ((abs(this->den) == 1) ? "" : ('/' + std::string(abs(this->den))));
+        return (((this->num < 0) != (this->den < 0)) ? "-" : "") + std::to_string(abs(this->num)) + 
+            ((abs(this->den) == 1) ? "" : ('/' + std::to_string(abs(this->den))));
     }
     /*
      * '+', '-', '*', '/' unary/binary operators
@@ -220,7 +220,7 @@ public:
         }
     template<class T1>
         friend inline constexpr Fraction<T1> operator -(const Fraction<T1>& f1, const Fraction<T1>& f2) noexcept {
-            return f1 + (-f2);
+            return Fraction<T1>(f1.num * f2.den - f2.num * f1.den, f1.den * f2.den);
         }
     template<class T1>
         friend inline constexpr Fraction<T1> operator *(const Fraction<T1>& f1, const Fraction<T1>& f2) noexcept {
@@ -228,7 +228,7 @@ public:
         }
     template<class T1>
         friend inline constexpr Fraction<T1> operator /(const Fraction<T1>& f1, const Fraction<T1>& f2) noexcept {
-            return f1 * f2.reverse();
+            return Fraction<T1>(f1.num * f2.den, f2.num * f1.den);
         }
     template<class T1>
         friend std::ostream& operator <<(std::ostream& os, const Fraction<T1>& frac) noexcept {
@@ -265,6 +265,24 @@ int operator "" _solve(const char* s, unsigned long n) {
 
 int operator "" _solve(const wchar_t* s, unsigned long n) {
 	return calculator::eval<int>(std::wstring(s, n));
+}
+
+template<typename T>
+calculator::Fraction<int> solve12lvl(const T& tmp) {
+    calculator::Fraction<int> f1(tmp.num1, tmp.num2),
+                  f2(tmp.num3, tmp.num4);
+    switch(tmp.op) {
+        case '+':
+            return f1 + f2;
+        case '-':
+            return f1 - f2;
+        case '*':
+            return f1 * f2;
+        case '/':
+            return f1 / f2;
+        default:
+            break;
+    } 
 }
 
 #endif /* __CALC_HPP_INCLUDED */

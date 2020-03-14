@@ -1,4 +1,4 @@
-CC = g++
+CC = g++-9
 LIBS = -llept -ltesseract -lcurl 
 CPPFLAGS= -O --std=c++17 
 LDFLAGS =
@@ -6,6 +6,8 @@ INCLUDE_PATH = -Iinclude/
 BIN = casino_hack
 # because of header-only style
 MAINFILE=src/main.cpp
+SOURCES=$(wildcard src/*.cpp)
+OBJECTS=$(SOURCES:src/%.cpp=bin/%.o)
 
 ifndef ($(OS))
 	# unix case
@@ -17,8 +19,15 @@ ifndef ($(OS))
 	endif
 endif
 
-all: main
-	$(CC) $(LIBS) $(LDFLAGS) main.o -o $(BIN)
-	rm main.o
-main: $(MAINFILE)
-	$(CC) $(CPPFLAGS) $(INCLUDE_PATH) -c $(MAINFILE) -o main.o
+all: $(OBJECTS)
+	@echo "Linking... "
+	@$(CC) $(LIBS) $(LDFLAGS) $(OBJECTS) -o $(BIN)
+	@echo "done"
+	@echo "Deleting temporary objects... "
+	@rm $(OBJECTS)
+	@echo "done"
+
+bin/%.o: src/%.cpp
+	@echo "Building src/$<..."
+	@$(CC) $(INCLUDE_PATH) $(CPPFLAGS) -c $< -o $@ 
+	@echo " done"
